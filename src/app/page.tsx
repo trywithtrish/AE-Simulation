@@ -1,65 +1,222 @@
-import Image from "next/image";
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { personas, type Persona, type CallType } from '@/lib/personas'
+
+const CALL_TYPES: { id: CallType; label: string; description: string; duration: string }[] = [
+  {
+    id: 'discovery',
+    label: 'Discovery Call',
+    description: 'You had a brief intro touch. Now uncover their real pain, qualify the opportunity, and earn a demo. Focus on asking questions—not pitching.',
+    duration: '20–30 min',
+  },
+  {
+    id: 'demo',
+    label: 'Demo Call',
+    description: 'Discovery is done. The prospect knows their pain. Walk them through MetaView, handle objections, and close for a next step.',
+    duration: '30–45 min',
+  },
+]
+
+const DIFFICULTY_COLOR: Record<string, string> = {
+  Warm: '#22c55e',
+  Moderate: '#f59e0b',
+  Challenging: '#ef4444',
+}
+
+function PersonaCard({ persona, onSelect }: { persona: Persona; onSelect: () => void }) {
+  return (
+    <button
+      onClick={onSelect}
+      className="text-left w-full rounded-2xl p-6 transition-all duration-200"
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget
+        el.style.background = 'var(--card-hover)'
+        el.style.borderColor = 'var(--accent)'
+        el.style.boxShadow = '0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow)'
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget
+        el.style.background = 'var(--card)'
+        el.style.borderColor = 'var(--border)'
+        el.style.boxShadow = 'none'
+      }}
+    >
+      <div className="flex items-start gap-4 mb-5">
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+          style={{ background: persona.avatarColor }}
+        >
+          {persona.avatarInitials}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-base" style={{ color: 'var(--text)' }}>{persona.name}</div>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{persona.title}</div>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            {persona.company} · {persona.stage} · {persona.employees} employees
+          </div>
+        </div>
+        <span
+          className="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+          style={{
+            color: DIFFICULTY_COLOR[persona.difficulty],
+            background: `${DIFFICULTY_COLOR[persona.difficulty]}18`,
+            border: `1px solid ${DIFFICULTY_COLOR[persona.difficulty]}40`,
+          }}
+        >
+          {persona.difficulty}
+        </span>
+      </div>
+
+      <div className="mb-4">
+        <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--text-dim)' }}>
+          Pain Points
+        </div>
+        <ul className="space-y-1">
+          {persona.painPoints.map((p, i) => (
+            <li key={i} className="text-sm flex gap-2" style={{ color: 'var(--text-muted)' }}>
+              <span style={{ color: 'var(--accent)' }}>·</span>
+              <span>{p}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {persona.personalityTags.map((tag) => (
+          <span
+            key={tag}
+            className="text-xs px-2 py-0.5 rounded"
+            style={{ background: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <div className="text-xs rounded-lg p-3" style={{ background: 'var(--surface)', color: 'var(--text-muted)' }}>
+        <span className="font-semibold" style={{ color: 'var(--text-dim)' }}>Warm context: </span>
+        {persona.warmContext}
+      </div>
+    </button>
+  )
+}
 
 export default function Home() {
+  const router = useRouter()
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null)
+
+  function handleCallType(callType: CallType) {
+    if (!selectedPersona) return
+    router.push(`/call/${selectedPersona.id}/${callType}`)
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <div className="border-b" style={{ borderColor: 'var(--border)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-3">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
+            style={{ background: 'var(--accent)' }}
+          >
+            AE
+          </div>
+          <div>
+            <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>AE Call Simulator</div>
+            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>MetaView · Practice Edition</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="mb-10">
+          <h1 className="text-3xl font-semibold mb-3" style={{ color: 'var(--text)' }}>
+            Choose your prospect
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-base max-w-xl" style={{ color: 'var(--text-muted)' }}>
+            Each persona is a real buyer type in MetaView&apos;s ICP. They have genuine pain, real objections, and no patience for a generic pitch. Pick one, choose your call type, and go.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {personas.map((persona) => (
+            <PersonaCard key={persona.id} persona={persona} onSelect={() => setSelectedPersona(persona)} />
+          ))}
         </div>
-      </main>
-    </div>
-  );
+      </div>
+
+      {selectedPersona && (
+        <div
+          className="fixed inset-0 flex items-center justify-center p-6 z-50"
+          style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setSelectedPersona(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl p-6 animate-slide-up"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-6 pb-5" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+                style={{ background: selectedPersona.avatarColor }}
+              >
+                {selectedPersona.avatarInitials}
+              </div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{selectedPersona.name}</div>
+                <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {selectedPersona.title} at {selectedPersona.company}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPersona(null)}
+                className="ml-auto text-xl leading-none pb-1"
+                style={{ color: 'var(--text-dim)' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="text-sm font-semibold mb-4" style={{ color: 'var(--text-muted)' }}>
+              What kind of call?
+            </div>
+
+            <div className="space-y-3">
+              {CALL_TYPES.map((ct) => (
+                <button
+                  key={ct.id}
+                  onClick={() => handleCallType(ct.id)}
+                  className="w-full text-left rounded-xl p-4 transition-all duration-150"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget
+                    el.style.borderColor = 'var(--accent)'
+                    el.style.background = 'var(--accent-glow)'
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget
+                    el.style.borderColor = 'var(--border)'
+                    el.style.background = 'var(--surface)'
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{ct.label}</span>
+                    <span className="text-xs" style={{ color: 'var(--text-dim)' }}>{ct.duration}</span>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{ct.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  )
 }
