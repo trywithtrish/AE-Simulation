@@ -21,7 +21,12 @@ export async function POST(req: Request) {
       model: 'gpt-4o-realtime-preview',
       voice: persona.voice,
       instructions,
-      turn_detection: { type: 'server_vad' },
+      turn_detection: {
+        type: 'server_vad',
+        threshold: 0.5,
+        prefix_padding_ms: 200,
+        silence_duration_ms: 300,
+      },
       input_audio_transcription: { model: 'gpt-4o-mini-transcribe' },
     }),
   })
