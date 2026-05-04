@@ -3,8 +3,6 @@ import { personas } from '@/lib/personas'
 import type { CallType } from '@/lib/personas'
 import { METAVIEW_KNOWLEDGE, DISCOVERY_RUBRIC, DEMO_RUBRIC } from '@/lib/metaview'
 
-const openai = new OpenAI()
-
 export interface TranscriptEntry {
   role: 'user' | 'assistant'
   content: string
@@ -37,6 +35,7 @@ export interface GradeResult {
 }
 
 export async function POST(req: Request) {
+  const openai = new OpenAI()
   const { transcript, personaId, callType } = await req.json() as {
     transcript: TranscriptEntry[]
     personaId: string
