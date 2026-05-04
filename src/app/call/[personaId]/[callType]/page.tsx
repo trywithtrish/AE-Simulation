@@ -112,9 +112,11 @@ export default function CallPage() {
       const pc = new RTCPeerConnection()
       pcRef.current = pc
 
-      // Audio output element
+      // Audio output element — must be in DOM for autoplay to work
       const audio = document.createElement('audio')
       audio.autoplay = true
+      audio.style.display = 'none'
+      document.body.appendChild(audio)
       audioRef.current = audio
       pc.ontrack = (e) => { audio.srcObject = e.streams[0] }
 
@@ -168,10 +170,14 @@ export default function CallPage() {
     setCallState('ending')
     if (timerRef.current) clearInterval(timerRef.current)
 
-    // Stop all tracks
+    // Stop all tracks and remove audio element
     localStreamRef.current?.getTracks().forEach((t) => t.stop())
     dcRef.current?.close()
     pcRef.current?.close()
+    if (audioRef.current) {
+      audioRef.current.srcObject = null
+      audioRef.current.remove()
+    }
 
     // Store transcript for debrief
     sessionStorage.setItem('callTranscript', JSON.stringify(transcriptRef.current))
