@@ -131,6 +131,37 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-12">
+        {/* Interview Prep CTA */}
+        <button
+          onClick={() => router.push('/interview-prep')}
+          className="w-full text-left rounded-2xl p-6 mb-8 transition-all duration-200 flex items-center gap-6"
+          style={{ background: 'var(--card)', border: '1px solid var(--accent)' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = '0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow)'
+            e.currentTarget.style.background = 'var(--card-hover)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = 'none'
+            e.currentTarget.style.background = 'var(--card)'
+          }}
+        >
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
+            style={{ background: 'var(--accent)' }}
+          >
+            ★
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-base mb-0.5" style={{ color: 'var(--text)' }}>
+              Interview Prep Mode
+            </div>
+            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              Simulate the full Metaview AE interview — target list, live roleplay with two stakeholders, reflection + grade.
+            </div>
+          </div>
+          <div className="text-sm flex-shrink-0" style={{ color: 'var(--accent)' }}>→</div>
+        </button>
+
         <div className="mb-10">
           <h1 className="text-3xl font-semibold mb-3" style={{ color: 'var(--text)' }}>
             Choose your prospect
@@ -143,6 +174,61 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {personas.map((persona) => (
             <PersonaCard key={persona.id} persona={persona} onSelect={() => setSelectedPersona(persona)} />
+          ))}
+        </div>
+
+        {/* Quiz modes */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            {
+              path: '/product-quiz',
+              icon: '📚',
+              title: 'Product Knowledge Test',
+              description: 'Randomized questions on modules, integrations, pricing, proof points, and competitors. Graded with a model answer after each.',
+              tag: '14 topics',
+            },
+            {
+              path: '/objection-quiz',
+              icon: '🛡️',
+              title: 'Objection Handling Test',
+              description: 'Realistic prospect scenarios — recording consent, adoption failure, "we use Otter," budget pushback, and more. Graded on acknowledge, specificity, proof point, and momentum.',
+              tag: '12 objections',
+            },
+          ].map((mode) => (
+            <button
+              key={mode.path}
+              onClick={() => router.push(mode.path)}
+              className="text-left rounded-2xl p-5 transition-all duration-200"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget
+                el.style.background = 'var(--card-hover)'
+                el.style.borderColor = 'var(--accent)'
+                el.style.boxShadow = '0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow)'
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget
+                el.style.background = 'var(--card)'
+                el.style.borderColor = 'var(--border)'
+                el.style.boxShadow = 'none'
+              }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="text-2xl flex-shrink-0 mt-0.5">{mode.icon}</div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{mode.title}</span>
+                    <span
+                      className="text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0"
+                      style={{ background: 'var(--surface)', color: 'var(--text-dim)' }}
+                    >
+                      {mode.tag}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{mode.description}</p>
+                </div>
+              </div>
+            </button>
           ))}
         </div>
       </div>
