@@ -22,6 +22,12 @@ export interface CoachingMoment {
   betterApproach: string
 }
 
+export interface ActionableRecommendation {
+  area: string
+  action: string
+  exampleLanguage: string
+}
+
 export interface GradeResult {
   overallGrade: string
   overallScore: number
@@ -30,6 +36,7 @@ export interface GradeResult {
   categories: GradeCategory[]
   strengths: string[]
   improvements: string[]
+  recommendations: ActionableRecommendation[]
   coachingMoments: CoachingMoment[]
   summary: string
 }
@@ -69,6 +76,8 @@ Persona context:
 
 Evaluate the AE's performance against the rubric. Be honest and specific. If the call was short or the AE didn't engage meaningfully, reflect that in low scores. Quote exact lines from the transcript when citing examples.
 
+For the "recommendations" field: each recommendation must be genuinely actionable. Do not write vague advice like "ask more discovery questions." Instead, name the specific moment or pattern from this call, explain the concrete behavior change, and write the exact words or phrase the AE could use in a future call. The exampleLanguage should be a complete sentence or two they could actually say out loud — not a template, a real line.
+
 Return ONLY valid JSON matching this exact structure:
 {
   "overallGrade": "A" | "A-" | "B+" | "B" | "B-" | "C+" | "C" | "C-" | "D" | "F",
@@ -86,6 +95,13 @@ Return ONLY valid JSON matching this exact structure:
   ],
   "strengths": ["<specific strength 1>", "<specific strength 2>", "<specific strength 3>"],
   "improvements": ["<specific area to improve 1>", "<area 2>", "<area 3>"],
+  "recommendations": [
+    {
+      "area": "<which skill or category this addresses>",
+      "action": "<one concrete thing to try differently next time — specific behavior, not a platitude>",
+      "exampleLanguage": "<exact words or phrasing the AE could use — write it in first person as if they are speaking it on a real call>"
+    }
+  ],
   "coachingMoments": [
     {
       "quote": "<exact quote from transcript where AE missed an opportunity or made a mistake>",

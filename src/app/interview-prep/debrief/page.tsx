@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GradeResult } from '@/app/api/grade/route'
 import type { SelfReflection, TargetAccount, InterviewPrepTranscriptEntry } from '@/lib/interview-prep'
@@ -47,6 +47,7 @@ export default function InterviewPrepDebriefPage() {
   const [transcript, setTranscript] = useState<InterviewPrepTranscriptEntry[]>([])
   const [showTranscript, setShowTranscript] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const rawTranscript = sessionStorage.getItem('interviewPrep.transcript')
@@ -90,18 +91,30 @@ export default function InterviewPrepDebriefPage() {
 
   const gradeColor = result ? (GRADE_COLOR[result.overallGrade] ?? 'var(--accent)') : 'var(--accent)'
 
-  function speakerLabel(e: InterviewPrepTranscriptEntry, account: TargetAccount | null) {
-    if (e.speaker === 'ae') return 'You'
-    if (!account) return e.speaker
-    if (e.speaker === 'vpPeople') return account.stakeholders.vpPeople.name
-    return account.stakeholders.directorTa.name
-  }
-
   const [account, setAccount] = useState<TargetAccount | null>(null)
   useEffect(() => {
     const raw = sessionStorage.getItem('interviewPrep.targetAccount')
     if (raw) setAccount(JSON.parse(raw))
   }, [])
+
+  function speakerLabel(e: InterviewPrepTranscriptEntry, acct: TargetAccount | null): string {
+    if (e.speaker === 'ae') return 'Trisha (AE)'
+    if (!acct) return e.speaker
+    if (e.speaker === 'vpPeople') return `${acct.stakeholders.vpPeople.name} (${acct.stakeholders.vpPeople.title})`
+    return `${acct.stakeholders.directorTa.name} (${acct.stakeholders.directorTa.title})`
+  }
+
+  const copyTranscript = useCallback(() => {
+    if (!transcript.length) return
+    const text = transcript
+      .map((e) => `${speakerLabel(e, account)}:\n${e.content}`)
+      .join('\n\n')
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript, account])
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -264,6 +277,34 @@ export default function InterviewPrepDebriefPage() {
               </div>
             </div>
 
+            {/* Actionable recommendations */}
+            {result.recommendations?.length > 0 && (
+              <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Actionable Recommendations</div>
+                <p className="text-xs mb-5" style={{ color: 'var(--text-dim)' }}>
+                  Specific things to try next time, with exact language you can use.
+                </p>
+                <div className="space-y-4">
+                  {result.recommendations.map((rec, i) => (
+                    <div key={i} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent)' }}>
+                        {rec.area}
+                      </div>
+                      <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>
+                        {rec.action}
+                      </p>
+                      <div className="rounded-lg px-3 py-2.5" style={{ background: 'var(--card)', border: '1px solid var(--accent)', borderLeft: '3px solid var(--accent)' }}>
+                        <div className="text-[10px] font-semibold mb-1" style={{ color: 'var(--accent)' }}>Try saying:</div>
+                        <p className="text-xs italic leading-relaxed" style={{ color: 'var(--text)' }}>
+                          &ldquo;{rec.exampleLanguage}&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Coaching moments */}
             {result.coachingMoments.length > 0 && (
               <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -302,7 +343,8 @@ export default function InterviewPrepDebriefPage() {
                 <span className="text-xs">{showTranscript ? '↑ Collapse' : '↓ Expand'}</span>
               </button>
               {showTranscript && (
-                <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto" style={{ background: 'var(--surface)' }}>
+                <>
+                <div className="px-6 py-4 space-y-4 max-h-[480px] overflow-y-auto" style={{ background: 'var(--surface)' }}>
                   {transcript.map((entry, i) => {
                     const isAe = entry.speaker === 'ae'
                     const sk = entry.speaker === 'vpPeople' ? account?.stakeholders.vpPeople : account?.stakeholders.directorTa
@@ -310,11 +352,10 @@ export default function InterviewPrepDebriefPage() {
                     const label = speakerLabel(entry, account)
                     return (
                       <div key={i} className={`flex gap-3 ${isAe ? 'flex-row-reverse' : ''}`}>
-                        <div className="text-[10px] font-semibold flex-shrink-0 mt-0.5 min-w-[28px] text-center" style={{ color }}>
-                          {isAe ? 'T' : (sk?.avatarInitials ?? 'P')}
-                        </div>
-                        <div className="flex flex-col" style={{ maxWidth: '85%', alignItems: isAe ? 'flex-end' : 'flex-start' }}>
-                          <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-dim)' }}>{label}</div>
+                        <div className="flex flex-col" style={{ maxWidth: '78%', alignItems: isAe ? 'flex-end' : 'flex-start' }}>
+                          <div className="text-[10px] font-semibold mb-0.5 whitespace-nowrap" style={{ color }}>
+                            {label}
+                          </div>
                           <div
                             className="text-xs rounded-lg px-3 py-2 leading-relaxed"
                             style={{
@@ -330,6 +371,20 @@ export default function InterviewPrepDebriefPage() {
                     )
                   })}
                 </div>
+                <div className="px-6 py-3 flex justify-end" style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+                  <button
+                    onClick={copyTranscript}
+                    className="text-xs px-4 py-2 rounded-lg font-medium transition-all"
+                    style={{
+                      background: copied ? '#22c55e22' : 'var(--card)',
+                      color: copied ? '#22c55e' : 'var(--text-muted)',
+                      border: `1px solid ${copied ? '#22c55e' : 'var(--border)'}`,
+                    }}
+                  >
+                    {copied ? '✓ Copied!' : 'Copy transcript'}
+                  </button>
+                </div>
+                </>
               )}
             </div>
 

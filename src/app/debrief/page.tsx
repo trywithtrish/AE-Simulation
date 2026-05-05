@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GradeResult } from '@/app/api/grade/route'
+import { personas } from '@/lib/personas'
 
 const GRADE_COLOR: Record<string, string> = {
   A: '#22c55e', 'A-': '#4ade80',
@@ -17,10 +18,7 @@ function ScoreBar({ score, max }: { score: number; max: number }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 rounded-full h-1.5" style={{ background: 'var(--border)' }}>
-        <div
-          className="h-1.5 rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, background: color }}
-        />
+        <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
       </div>
       <span className="text-xs font-mono w-12 text-right" style={{ color: 'var(--text-muted)' }}>
         {score}/{max}
@@ -36,6 +34,8 @@ export default function DebriefPage() {
   const [error, setError] = useState<string | null>(null)
   const [transcript, setTranscript] = useState<{ role: string; content: string }[]>([])
   const [showTranscript, setShowTranscript] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [personaLabel, setPersonaLabel] = useState<{ name: string; title: string } | null>(null)
 
   useEffect(() => {
     const storedTranscript = sessionStorage.getItem('callTranscript')
@@ -46,6 +46,9 @@ export default function DebriefPage() {
       router.push('/')
       return
     }
+
+    const persona = personas.find((p) => p.id === personaId)
+    if (persona) setPersonaLabel({ name: persona.name, title: persona.title })
 
     const parsed = JSON.parse(storedTranscript)
     setTranscript(parsed)
@@ -62,21 +65,32 @@ export default function DebriefPage() {
       body: JSON.stringify({ transcript: parsed, personaId, callType }),
     })
       .then((r) => r.json())
-      .then((data) => {
-        setResult(data)
-        setGrading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setGrading(false)
-      })
+      .then((data) => { setResult(data); setGrading(false) })
+      .catch((err) => { setError(err.message); setGrading(false) })
   }, [router])
+
+  const copyTranscript = useCallback(() => {
+    if (!transcript.length) return
+    const text = transcript
+      .map((e) => {
+        const speaker = e.role === 'user'
+          ? 'Trisha (AE)'
+          : personaLabel
+            ? `${personaLabel.name} (${personaLabel.title})`
+            : 'Prospect'
+        return `${speaker}:\n${e.content}`
+      })
+      .join('\n\n')
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [transcript, personaLabel])
 
   const gradeColor = result ? (GRADE_COLOR[result.overallGrade] ?? '#6366f1') : 'var(--accent)'
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      {/* Header */}
       <div className="border-b" style={{ borderColor: 'var(--border)' }}>
         <div className="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="font-semibold text-sm" style={{ color: 'var(--text)' }}>Call Debrief</div>
@@ -114,32 +128,22 @@ export default function DebriefPage() {
         {result && !grading && (
           <div className="space-y-6 animate-slide-up">
             {/* Overall grade */}
-            <div
-              className="rounded-2xl p-8 flex items-center gap-8"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-            >
+            <div className="rounded-2xl p-8 flex items-center gap-8" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="text-center flex-shrink-0">
-                <div
-                  className="text-7xl font-bold leading-none mb-1"
-                  style={{ color: gradeColor }}
-                >
+                <div className="text-7xl font-bold leading-none mb-1" style={{ color: gradeColor }}>
                   {result.overallGrade}
                 </div>
-                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>
-                  {result.overallScore}/100
-                </div>
+                <div className="text-xs" style={{ color: 'var(--text-dim)' }}>{result.overallScore}/100</div>
               </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-dim)' }}>
                   {result.callType === 'discovery' ? 'Discovery Call' : 'Demo Call'} · {result.personaName}
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                  {result.summary}
-                </p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{result.summary}</p>
               </div>
             </div>
 
-            {/* Category scores */}
+            {/* Scorecard */}
             <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>Scorecard</div>
               <div className="space-y-5">
@@ -149,17 +153,12 @@ export default function DebriefPage() {
                       <span className="text-sm font-medium" style={{ color: 'var(--text)' }}>{cat.name}</span>
                     </div>
                     <ScoreBar score={cat.score} max={cat.maxScore} />
-                    <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                      {cat.feedback}
-                    </p>
+                    <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{cat.feedback}</p>
                     {cat.examples.length > 0 && (
                       <div className="mt-2 space-y-1">
                         {cat.examples.map((ex, i) => (
-                          <div
-                            key={i}
-                            className="text-xs rounded-lg px-3 py-2 italic"
-                            style={{ background: 'var(--surface)', color: 'var(--text-dim)', borderLeft: '2px solid var(--border)' }}
-                          >
+                          <div key={i} className="text-xs rounded-lg px-3 py-2 italic"
+                            style={{ background: 'var(--surface)', color: 'var(--text-dim)', borderLeft: '2px solid var(--border)' }}>
                             &ldquo;{ex}&rdquo;
                           </div>
                         ))}
@@ -177,8 +176,7 @@ export default function DebriefPage() {
                 <ul className="space-y-2.5">
                   {result.strengths.map((s, i) => (
                     <li key={i} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                      <span style={{ color: '#22c55e' }}>✓</span>
-                      {s}
+                      <span style={{ color: '#22c55e' }}>✓</span>{s}
                     </li>
                   ))}
                 </ul>
@@ -188,27 +186,50 @@ export default function DebriefPage() {
                 <ul className="space-y-2.5">
                   {result.improvements.map((s, i) => (
                     <li key={i} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                      <span style={{ color: '#f59e0b' }}>→</span>
-                      {s}
+                      <span style={{ color: '#f59e0b' }}>→</span>{s}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
+            {/* Actionable recommendations */}
+            {result.recommendations?.length > 0 && (
+              <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Actionable Recommendations</div>
+                <p className="text-xs mb-5" style={{ color: 'var(--text-dim)' }}>
+                  Specific things to try next time, with exact language you can use.
+                </p>
+                <div className="space-y-4">
+                  {result.recommendations.map((rec, i) => (
+                    <div key={i} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--accent)' }}>
+                        {rec.area}
+                      </div>
+                      <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>
+                        {rec.action}
+                      </p>
+                      <div className="rounded-lg px-3 py-2.5" style={{ background: 'var(--card)', border: '1px solid var(--accent)', borderLeft: '3px solid var(--accent)' }}>
+                        <div className="text-[10px] font-semibold mb-1" style={{ color: 'var(--accent)' }}>Try saying:</div>
+                        <p className="text-xs italic leading-relaxed" style={{ color: 'var(--text)' }}>
+                          &ldquo;{rec.exampleLanguage}&rdquo;
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Coaching moments */}
             {result.coachingMoments.length > 0 && (
               <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                <div className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>
-                  Coaching Moments
-                </div>
+                <div className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>Coaching Moments</div>
                 <div className="space-y-5">
                   {result.coachingMoments.map((m, i) => (
                     <div key={i} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                      <div
-                        className="text-xs italic mb-2 px-3 py-2 rounded-lg"
-                        style={{ background: 'var(--border-subtle)', color: 'var(--text-dim)', borderLeft: '2px solid var(--accent)' }}
-                      >
+                      <div className="text-xs italic mb-2 px-3 py-2 rounded-lg"
+                        style={{ background: 'var(--border-subtle)', color: 'var(--text-dim)', borderLeft: '2px solid var(--accent)' }}>
                         &ldquo;{m.quote}&rdquo;
                       </div>
                       <div className="text-xs mb-1.5" style={{ color: 'var(--danger)' }}>
@@ -223,7 +244,7 @@ export default function DebriefPage() {
               </div>
             )}
 
-            {/* Transcript toggle */}
+            {/* Transcript */}
             <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
               <button
                 onClick={() => setShowTranscript(!showTranscript)}
@@ -237,32 +258,57 @@ export default function DebriefPage() {
               </button>
 
               {showTranscript && (
-                <div className="px-6 py-4 space-y-3 max-h-96 overflow-y-auto" style={{ background: 'var(--surface)' }}>
-                  {transcript.map((entry, i) => (
-                    <div key={i} className={`flex gap-3 ${entry.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div
-                        className="text-xs font-semibold flex-shrink-0 mt-0.5 w-6 text-center"
-                        style={{ color: entry.role === 'user' ? 'var(--accent)' : 'var(--text-dim)' }}
-                      >
-                        {entry.role === 'user' ? 'T' : 'P'}
-                      </div>
-                      <div
-                        className="text-xs rounded-lg px-3 py-2 leading-relaxed max-w-[85%]"
-                        style={{
-                          background: entry.role === 'user' ? 'var(--accent-glow)' : 'var(--card)',
-                          color: 'var(--text-muted)',
-                          border: '1px solid var(--border)',
-                        }}
-                      >
-                        {entry.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <div className="px-6 py-4 space-y-4 max-h-[480px] overflow-y-auto" style={{ background: 'var(--surface)' }}>
+                    {transcript.map((entry, i) => {
+                      const isAe = entry.role === 'user'
+                      const speakerName = isAe
+                        ? 'Trisha (AE)'
+                        : personaLabel
+                          ? `${personaLabel.name} (${personaLabel.title})`
+                          : 'Prospect'
+                      return (
+                        <div key={i} className={`flex gap-3 ${isAe ? 'flex-row-reverse' : ''}`}>
+                          <div className="flex-shrink-0 mt-0.5" style={{ minWidth: '0' }}>
+                            <div
+                              className="text-[10px] font-semibold whitespace-nowrap"
+                              style={{ color: isAe ? 'var(--accent)' : 'var(--text-dim)' }}
+                            >
+                              {speakerName}
+                            </div>
+                          </div>
+                          <div
+                            className="text-xs rounded-lg px-3 py-2 leading-relaxed"
+                            style={{
+                              background: isAe ? 'var(--accent-glow)' : 'var(--card)',
+                              color: 'var(--text-muted)',
+                              border: '1px solid var(--border)',
+                              maxWidth: '75%',
+                            }}
+                          >
+                            {entry.content}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="px-6 py-3 flex justify-end" style={{ background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+                    <button
+                      onClick={copyTranscript}
+                      className="text-xs px-4 py-2 rounded-lg font-medium transition-all"
+                      style={{
+                        background: copied ? '#22c55e22' : 'var(--card)',
+                        color: copied ? '#22c55e' : 'var(--text-muted)',
+                        border: `1px solid ${copied ? '#22c55e' : 'var(--border)'}`,
+                      }}
+                    >
+                      {copied ? '✓ Copied!' : 'Copy transcript'}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
 
-            {/* CTA */}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => router.push('/')}
