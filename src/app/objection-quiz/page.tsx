@@ -112,7 +112,7 @@ export default function ObjectionQuizPage() {
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Respond as you would on a real call. Acknowledge first, then address specifically, then keep momentum."
+              placeholder="Respond as you would on a real call. Acknowledge the concern first, then address it specifically."
               rows={6}
               className="w-full px-4 py-3 rounded-xl text-sm resize-none mb-4"
               style={{
@@ -164,49 +164,53 @@ export default function ObjectionQuizPage() {
                   <DimBar score={result.breakdown.acknowledge.score} max={result.breakdown.acknowledge.max} label="Acknowledge" />
                   <DimBar score={result.breakdown.specificity.score} max={result.breakdown.specificity.max} label="Specificity" />
                   <DimBar score={result.breakdown.proofPoint.score} max={result.breakdown.proofPoint.max} label="Proof point" />
-                  <DimBar score={result.breakdown.momentum.score} max={result.breakdown.momentum.max} label="Momentum" />
                 </div>
               </div>
             </div>
 
-            {/* Dimension feedback */}
-            <div className="rounded-2xl p-5 space-y-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-dim)' }}>Breakdown</div>
-              {Object.entries(result.breakdown).map(([key, dim]) => (
-                <div key={key} className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  <span className="font-semibold capitalize" style={{ color: 'var(--text)' }}>{key === 'proofPoint' ? 'Proof point' : key}: </span>
-                  {dim.feedback}
-                </div>
-              ))}
+            {/* Per-dimension feedback + tip */}
+            <div className="space-y-3">
+              {(
+                [
+                  { key: 'acknowledge', label: 'Acknowledge' },
+                  { key: 'specificity', label: 'Specificity' },
+                  { key: 'proofPoint', label: 'Proof point' },
+                ] as const
+              ).map(({ key, label }) => {
+                const dim = result.breakdown[key]
+                const pct = (dim.score / dim.max) * 100
+                const accent = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'
+                return (
+                  <div key={key} className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{label}</span>
+                      <span className="text-xs font-mono" style={{ color: accent }}>{dim.score}/{dim.max}</span>
+                    </div>
+                    <p className="text-xs leading-relaxed mb-2.5" style={{ color: 'var(--text-muted)' }}>{dim.feedback}</p>
+                    {dim.tip && (
+                      <div className="rounded-lg px-3 py-2" style={{ background: 'var(--surface)', borderLeft: `3px solid ${accent}` }}>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Try: </span>
+                        <span className="text-xs italic leading-relaxed" style={{ color: 'var(--text)' }}>&ldquo;{dim.tip}&rdquo;</span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
-            {/* What worked / improve */}
-            <div className="grid grid-cols-2 gap-3">
-              {result.whatWorked.length > 0 && (
-                <div className="rounded-2xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs font-semibold mb-3" style={{ color: '#22c55e' }}>What worked</div>
-                  <ul className="space-y-2">
-                    {result.whatWorked.map((s, i) => (
-                      <li key={i} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span style={{ color: '#22c55e' }}>✓</span>{s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {result.whatToImprove.length > 0 && (
-                <div className="rounded-2xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div className="text-xs font-semibold mb-3" style={{ color: '#f59e0b' }}>To improve</div>
-                  <ul className="space-y-2">
-                    {result.whatToImprove.map((s, i) => (
-                      <li key={i} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                        <span style={{ color: '#f59e0b' }}>→</span>{s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {/* What worked */}
+            {result.whatWorked.length > 0 && (
+              <div className="rounded-2xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="text-xs font-semibold mb-3" style={{ color: '#22c55e' }}>What worked</div>
+                <ul className="space-y-2">
+                  {result.whatWorked.map((s, i) => (
+                    <li key={i} className="text-xs flex gap-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                      <span style={{ color: '#22c55e' }}>✓</span>{s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Model response */}
             <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
