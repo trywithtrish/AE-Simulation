@@ -5,13 +5,40 @@ import { useRouter } from 'next/navigation'
 import { PRODUCT_QUESTIONS, pickRandom, type ProductQuestion } from '@/lib/quiz'
 import type { QuizGradeResult } from '@/app/api/product-quiz/grade/route'
 
+type Difficulty = 'easy' | 'medium' | 'hard' | 'all'
+
 const GRADE_COLOR: Record<string, string> = {
   'A+': '#22c55e', A: '#22c55e', 'A-': '#4ade80',
   'B+': '#86efac', B: '#f59e0b', 'B-': '#fbbf24',
-  'C+': '#f97316', C: '#fb923c', 'D': '#ef4444', F: '#dc2626',
+  'C+': '#f97316', C: '#fb923c', D: '#ef4444', F: '#dc2626',
 }
 
-const DIFFICULTY_COLOR = { easy: '#22c55e', medium: '#f59e0b', hard: '#ef4444' }
+const DIFFICULTY_COLOR: Record<string, string> = {
+  easy: '#22c55e',
+  medium: '#f59e0b',
+  hard: '#ef4444',
+  all: 'var(--accent)',
+}
+
+const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  easy: 'Easy',
+  medium: 'Medium',
+  hard: 'Hard',
+  all: 'All',
+}
+
+const DIFFICULTY_HINT: Record<Difficulty, string> = {
+  easy: 'Modules, pricing, setup, consent — the essentials',
+  medium: 'Integrations, proof points, reports, competitors',
+  hard: 'Greenhouse specifics, licensing edge cases, deep competitive positioning',
+  all: 'Full mix across all topics',
+}
+
+function getPool(difficulty: Difficulty): ProductQuestion[] {
+  return difficulty === 'all'
+    ? PRODUCT_QUESTIONS
+    : PRODUCT_QUESTIONS.filter((q) => q.difficulty === difficulty)
+}
 
 function ScoreBar({ score, max, color }: { score: number; max: number; color: string }) {
   return (
@@ -27,19 +54,33 @@ function ScoreBar({ score, max, color }: { score: number; max: number; color: st
 export default function ProductQuizPage() {
   const router = useRouter()
 
-  const pickNewQuestion = useCallback((exclude?: ProductQuestion) => {
-    const q = pickRandom(PRODUCT_QUESTIONS, exclude)
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy')
+
+  const pickNewQuestion = useCallback((pool: ProductQuestion[], exclude?: ProductQuestion) => {
+    const q = pickRandom(pool, exclude)
     const prompt = pickRandom(q.prompts)
     return { question: q, prompt }
   }, [])
 
-  const [{ question, prompt }, setState] = useState(() => pickNewQuestion())
+  const [{ question, prompt }, setCurrentQuestion] = useState(() =>
+    pickNewQuestion(getPool('easy'))
+  )
   const [answer, setAnswer] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<QuizGradeResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [streak, setStreak] = useState(0)
   const [history, setHistory] = useState<{ score: number; topic: string }[]>([])
+
+  function changeDifficulty(d: Difficulty) {
+    setDifficulty(d)
+    const newPool = getPool(d)
+    setCurrentQuestion(pickNewQuestion(newPool))
+    setAnswer('')
+    setResult(null)
+    setError(null)
+    setStreak(0)
+  }
 
   async function submit() {
     if (!answer.trim()) return
@@ -65,8 +106,8 @@ export default function ProductQuizPage() {
   }
 
   function next() {
-    const next = pickNewQuestion(question)
-    setState(next)
+    const pool = getPool(difficulty)
+    setCurrentQuestion(pickNewQuestion(pool, question))
     setAnswer('')
     setResult(null)
     setError(null)
@@ -75,6 +116,8 @@ export default function ProductQuizPage() {
   const avgScore = history.length > 0
     ? Math.round((history.reduce((s, h) => s + h.score, 0) / history.length) * 10) / 10
     : null
+
+  const poolCount = getPool(difficulty).length
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -85,15 +128,44 @@ export default function ProductQuizPage() {
           </button>
           <div className="text-sm font-semibold" style={{ color: 'var(--text)' }}>Product Knowledge Test</div>
           <div className="flex items-center gap-3 text-xs" style={{ color: 'var(--text-dim)' }}>
-            {streak >= 2 && <span style={{ color: '#f59e0b' }}>🔥 {streak} streak</span>}
-            {avgScore !== null && <span>{history.length} answered · avg {avgScore}/10</span>}
+            {streak >= 2 && <span style={{ color: '#f59e0b' }}>🔥 {streak}</span>}
+            {avgScore !== null && <span>{history.length} done · avg {avgScore}/10</span>}
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-10">
+      <div className="max-w-2xl mx-auto px-6 py-8">
+
+        {/* Difficulty toggle */}
+        <div className="mb-6">
+          <div className="flex gap-2 mb-2">
+            {(['easy', 'medium', 'hard', 'all'] as Difficulty[]).map((d) => {
+              const active = difficulty === d
+              const color = DIFFICULTY_COLOR[d]
+              return (
+                <button
+                  key={d}
+                  onClick={() => changeDifficulty(d)}
+                  className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+                  style={{
+                    background: active ? `${color}20` : 'var(--surface)',
+                    color: active ? color : 'var(--text-dim)',
+                    border: `1px solid ${active ? color : 'var(--border)'}`,
+                  }}
+                >
+                  {DIFFICULTY_LABEL[d]}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-xs px-1" style={{ color: 'var(--text-dim)' }}>
+            {DIFFICULTY_HINT[difficulty]}
+            <span className="ml-1" style={{ color: 'var(--text-muted)' }}>· {poolCount} topic{poolCount !== 1 ? 's' : ''}</span>
+          </p>
+        </div>
+
         {/* Question card */}
-        <div className="rounded-2xl p-6 mb-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="rounded-2xl p-6 mb-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="flex items-center gap-2 mb-4">
             <span
               className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded"
@@ -160,7 +232,6 @@ export default function ProductQuizPage() {
         {/* Result */}
         {result && (
           <div className="space-y-4 animate-slide-up">
-            {/* Score */}
             <div className="rounded-2xl p-6 flex items-center gap-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="text-center flex-shrink-0">
                 <div className="text-5xl font-bold leading-none mb-1" style={{ color: GRADE_COLOR[result.letterGrade] ?? 'var(--accent)' }}>
@@ -168,13 +239,12 @@ export default function ProductQuizPage() {
                 </div>
                 <div className="text-xs font-mono" style={{ color: 'var(--text-dim)' }}>{result.score}/10</div>
               </div>
-              <div>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{result.verdict}</p>
+              <div className="flex-1">
+                <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{result.verdict}</p>
                 <ScoreBar score={result.score} max={10} color={GRADE_COLOR[result.letterGrade] ?? 'var(--accent)'} />
               </div>
             </div>
 
-            {/* What you got right / missed */}
             <div className="grid grid-cols-2 gap-3">
               {result.whatYouGotRight.length > 0 && (
                 <div className="rounded-2xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -202,7 +272,6 @@ export default function ProductQuizPage() {
               )}
             </div>
 
-            {/* Model answer */}
             <div className="rounded-2xl p-5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
               <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-dim)' }}>
                 Model answer
@@ -212,13 +281,27 @@ export default function ProductQuizPage() {
               </p>
             </div>
 
-            <button
-              onClick={next}
-              className="w-full py-3.5 rounded-xl font-semibold text-sm text-white"
-              style={{ background: 'var(--accent)' }}
-            >
-              Next question →
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => changeDifficulty(difficulty === 'easy' ? 'medium' : difficulty === 'medium' ? 'hard' : difficulty)}
+                className="px-5 py-3.5 rounded-xl text-sm font-medium transition-all"
+                style={{
+                  background: 'var(--surface)',
+                  color: 'var(--text-muted)',
+                  border: '1px solid var(--border)',
+                  display: difficulty === 'hard' || difficulty === 'all' ? 'none' : 'block',
+                }}
+              >
+                Step up to {difficulty === 'easy' ? 'medium' : 'hard'} →
+              </button>
+              <button
+                onClick={next}
+                className="flex-1 py-3.5 rounded-xl font-semibold text-sm text-white"
+                style={{ background: 'var(--accent)' }}
+              >
+                Next question →
+              </button>
+            </div>
           </div>
         )}
       </div>
