@@ -167,11 +167,11 @@ export default function Home() {
             Choose your prospect
           </h1>
           <p className="text-base max-w-xl" style={{ color: 'var(--text-muted)' }}>
-            Each persona is a real buyer type in MetaView&apos;s ICP. They have genuine pain, real objections, and no patience for a generic pitch. Pick one, choose your call type, and go.
+            Five real companies, five different buyers. Each has genuine pain, real objections, and no patience for a generic pitch. Pick one, choose your call type, and go.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {personas.map((persona) => (
             <PersonaCard key={persona.id} persona={persona} onSelect={() => setSelectedPersona(persona)} />
           ))}
