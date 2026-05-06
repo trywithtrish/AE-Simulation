@@ -168,7 +168,17 @@ export default function ObjectionQuizPage() {
               </div>
             </div>
 
-            {/* Per-dimension feedback + tip */}
+            {/* Your response */}
+            <div className="rounded-2xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-dim)' }}>
+                Your response
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
+                {answer}
+              </p>
+            </div>
+
+            {/* Per-dimension feedback + tips */}
             <div className="space-y-3">
               {(
                 [
@@ -180,17 +190,25 @@ export default function ObjectionQuizPage() {
                 const dim = result.breakdown[key]
                 const pct = (dim.score / dim.max) * 100
                 const accent = pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'
+                const tips = dim.tips ?? []
                 return (
                   <div key={key} className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold" style={{ color: 'var(--text)' }}>{label}</span>
                       <span className="text-xs font-mono" style={{ color: accent }}>{dim.score}/{dim.max}</span>
                     </div>
-                    <p className="text-xs leading-relaxed mb-2.5" style={{ color: 'var(--text-muted)' }}>{dim.feedback}</p>
-                    {dim.tip && (
-                      <div className="rounded-lg px-3 py-2" style={{ background: 'var(--surface)', borderLeft: `3px solid ${accent}` }}>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>Try: </span>
-                        <span className="text-xs italic leading-relaxed" style={{ color: 'var(--text)' }}>&ldquo;{dim.tip}&rdquo;</span>
+                    <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>{dim.feedback}</p>
+                    {tips.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+                          Ways to try it
+                        </div>
+                        {tips.map((tip, i) => (
+                          <div key={i} className="rounded-lg px-3 py-2" style={{ background: 'var(--surface)', borderLeft: `3px solid ${accent}` }}>
+                            <span className="text-[10px] font-semibold" style={{ color: accent }}>Option {i + 1}: </span>
+                            <span className="text-xs italic leading-relaxed" style={{ color: 'var(--text)' }}>&ldquo;{tip}&rdquo;</span>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

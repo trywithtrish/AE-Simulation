@@ -245,6 +245,16 @@ export default function ProductQuizPage() {
               </div>
             </div>
 
+            {/* Your response */}
+            <div className="rounded-2xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-dim)' }}>
+                Your response
+              </div>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>
+                {answer}
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               {result.whatYouGotRight.length > 0 && (
                 <div className="rounded-2xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>

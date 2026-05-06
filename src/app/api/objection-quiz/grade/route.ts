@@ -13,9 +13,9 @@ export interface ObjectionGradeResult {
   letterGrade: string
   verdict: string
   breakdown: {
-    acknowledge: { score: number; max: number; feedback: string; tip: string }
-    specificity: { score: number; max: number; feedback: string; tip: string }
-    proofPoint: { score: number; max: number; feedback: string; tip: string }
+    acknowledge: { score: number; max: number; feedback: string; tips: string[] }
+    specificity: { score: number; max: number; feedback: string; tips: string[] }
+    proofPoint: { score: number; max: number; feedback: string; tips: string[] }
   }
   whatWorked: string[]
   whatToImprove: string[]
@@ -71,7 +71,7 @@ Grade across 3 dimensions:
 
 Score = sum of breakdown scores (out of 10)
 
-CRITICAL REQUIREMENT for the "tip" field in each breakdown dimension: Do NOT just diagnose the problem. Give a specific, usable fix. The tip must include exact language the AE can try — written in first person, as if they are saying it to the prospect. If they scored full marks on a dimension, the tip should reinforce what made it work and suggest a slight upgrade. Tips should be 1–2 sentences maximum.
+CRITICAL REQUIREMENT for the "tips" array in each breakdown dimension: Do NOT just diagnose the problem. Give 2–3 specific, distinct ways to handle this dimension better. Each tip must be written in first person as if the AE is saying it to the prospect — a complete sentence or two they could actually use. Make the tips meaningfully different from each other (different angles, different phrasings, different levels of directness). If they scored full marks, tips should show how to make a strong response even sharper or more memorable.
 
 Return ONLY valid JSON:
 {
@@ -82,19 +82,31 @@ Return ONLY valid JSON:
       "score": <0-2>,
       "max": 2,
       "feedback": "<one sentence describing what they did or didn't do>",
-      "tip": "<specific fix or reinforcement with example language they can say>"
+      "tips": [
+        "<first way to acknowledge this specific concern — a complete sentence>",
+        "<second way, different tone or framing>",
+        "<optional third if meaningfully different>"
+      ]
     },
     "specificity": {
       "score": <0-5>,
       "max": 5,
       "feedback": "<one sentence on what was specific or vague>",
-      "tip": "<specific fix with the exact Metaview fact or feature they should have named, and how to say it>"
+      "tips": [
+        "<first specific fix using an exact Metaview fact or feature — say it as the AE>",
+        "<second approach, e.g. leading with the problem reframe instead of the feature>",
+        "<third if there's a distinct angle worth showing>"
+      ]
     },
     "proofPoint": {
       "score": <0-3>,
       "max": 3,
       "feedback": "<one sentence on whether and how they used proof>",
-      "tip": "<which proof point to use here and exactly how to drop it naturally>"
+      "tips": [
+        "<first proof point option with exactly how to drop it naturally>",
+        "<second proof point or a different way to frame the same one>",
+        "<optional third>"
+      ]
     }
   },
   "whatWorked": ["<specific thing they did well>"],
