@@ -131,36 +131,54 @@ export default function Home() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-12">
-        {/* Interview Prep CTA */}
-        <button
-          onClick={() => router.push('/interview-prep')}
-          className="w-full text-left rounded-2xl p-6 mb-8 transition-all duration-200 flex items-center gap-6"
-          style={{ background: 'var(--card)', border: '1px solid var(--accent)' }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.boxShadow = '0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow)'
-            e.currentTarget.style.background = 'var(--card-hover)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.boxShadow = 'none'
-            e.currentTarget.style.background = 'var(--card)'
-          }}
-        >
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-lg font-bold flex-shrink-0"
-            style={{ background: 'var(--accent)' }}
+        {/* Featured CTAs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={() => router.push('/interview-prep')}
+            className="text-left rounded-2xl p-6 transition-all duration-200 flex items-start gap-4"
+            style={{ background: 'var(--card)', border: '1px solid var(--accent)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 0 1px var(--accent), 0 8px 32px var(--accent-glow)'
+              e.currentTarget.style.background = 'var(--card-hover)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'var(--card)'
+            }}
           >
-            ★
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-base mb-0.5" style={{ color: 'var(--text)' }}>
-              Interview Prep Mode
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0" style={{ background: 'var(--accent)' }}>★</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm mb-1" style={{ color: 'var(--text)' }}>Interview Prep Mode</div>
+              <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Full Metaview AE interview — target list, live roleplay with two stakeholders, reflection + grade.
+              </div>
             </div>
-            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              Simulate the full Metaview AE interview — target list, live roleplay with two stakeholders, reflection + grade.
+            <div className="text-sm flex-shrink-0 mt-1" style={{ color: 'var(--accent)' }}>→</div>
+          </button>
+
+          <button
+            onClick={() => router.push('/discovery-coach')}
+            className="text-left rounded-2xl p-6 transition-all duration-200 flex items-start gap-4"
+            style={{ background: 'var(--card)', border: '1px solid #0ea5e9' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 0 0 1px #0ea5e9, 0 8px 32px #0ea5e944'
+              e.currentTarget.style.background = 'var(--card-hover)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.background = 'var(--card)'
+            }}
+          >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0" style={{ background: '#0ea5e9' }}>🎯</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm mb-1" style={{ color: 'var(--text)' }}>Discovery Deep Dive</div>
+              <div className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                20-min discovery call with Riley (Director of Talent, Attio). Pain is layered — coaching teaches you to dig.
+              </div>
             </div>
-          </div>
-          <div className="text-sm flex-shrink-0" style={{ color: 'var(--accent)' }}>→</div>
-        </button>
+            <div className="text-sm flex-shrink-0 mt-1" style={{ color: '#0ea5e9' }}>→</div>
+          </button>
+        </div>
 
         <div className="mb-10">
           <h1 className="text-3xl font-semibold mb-3" style={{ color: 'var(--text)' }}>
