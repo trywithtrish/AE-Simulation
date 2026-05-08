@@ -11,8 +11,13 @@ export async function POST() {
       model: 'gpt-4o-realtime-preview',
       voice: DISCOVERY_COACH_PERSONA.voice,
       instructions: DISCOVERY_COACH_SYSTEM_PROMPT,
-      turn_detection: { type: 'server_vad' },
-      input_audio_transcription: { model: 'gpt-4o-mini-transcribe' },
+      turn_detection: {
+        type: 'server_vad',
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 1500,
+      },
+      input_audio_transcription: { model: 'gpt-4o-mini-transcribe', language: 'en' },
     }),
   })
 
