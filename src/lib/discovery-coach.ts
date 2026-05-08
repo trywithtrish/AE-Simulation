@@ -162,6 +162,17 @@ export interface MissedOpportunity {
   whyItMatters: string
 }
 
+export interface StrengthsMoment {
+  aeQuote: string
+  whyGood: string
+}
+
+export interface QuestionRewrite {
+  originalQuestion: string
+  betterVersion: string
+  whyBetter: string
+}
+
 export interface DiscoveryGradeResult {
   overallGrade: string
   overallScore: number
@@ -174,6 +185,8 @@ export interface DiscoveryGradeResult {
   }[]
   painLayersUncovered: PainLayerCheck[]
   missedOpportunities: MissedOpportunity[]
+  strengthsMoments: StrengthsMoment[]
+  questionRewrites: QuestionRewrite[]
   topRecommendations: {
     skill: string
     advice: string

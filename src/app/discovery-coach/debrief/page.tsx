@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import type { DiscoveryGradeResult } from '@/lib/discovery-coach'
+import type { DiscoveryGradeResult, StrengthsMoment, QuestionRewrite } from '@/lib/discovery-coach'
 import { DISCOVERY_COACH_PERSONA } from '@/lib/discovery-coach'
 
 const GRADE_COLOR: Record<string, string> = {
@@ -179,6 +179,29 @@ export default function DiscoveryDebriefPage() {
               </div>
             </div>
 
+            {/* What you did well */}
+            {result.strengthsMoments?.length > 0 && (
+              <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>What you did well</div>
+                <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
+                  Specific moments where your technique was on point. Repeat these.
+                </p>
+                <div className="space-y-3">
+                  {result.strengthsMoments.map((s: StrengthsMoment, i: number) => (
+                    <div key={i} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid #22c55e33' }}>
+                      <div className="text-xs italic px-3 py-2 rounded-lg mb-3" style={{ background: 'var(--card)', color: 'var(--text-muted)', borderLeft: '2px solid #22c55e' }}>
+                        &ldquo;{s.aeQuote}&rdquo;
+                      </div>
+                      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        <span className="font-semibold" style={{ color: '#22c55e' }}>Why it worked: </span>
+                        {s.whyGood}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Categories */}
             <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="text-sm font-semibold mb-5" style={{ color: 'var(--text)' }}>Discovery scorecard</div>
@@ -230,12 +253,43 @@ export default function DiscoveryDebriefPage() {
               </div>
             )}
 
+            {/* Question rewrites */}
+            {result.questionRewrites?.length > 0 && (
+              <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Question rewrites</div>
+                <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
+                  Questions you actually asked — rewritten to be more effective. Same intent, better technique.
+                </p>
+                <div className="space-y-4">
+                  {result.questionRewrites.map((qr: QuestionRewrite, i: number) => (
+                    <div key={i} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                      <div className="mb-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--danger)' }}>You asked</div>
+                        <div className="text-xs italic px-3 py-2 rounded-lg" style={{ background: 'var(--card)', color: 'var(--text-muted)', borderLeft: '2px solid var(--danger)' }}>
+                          &ldquo;{qr.originalQuestion}&rdquo;
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--accent)' }}>Try instead</div>
+                        <div className="text-xs italic px-3 py-2 rounded-lg" style={{ background: 'var(--card)', color: 'var(--text)', borderLeft: '2px solid var(--accent)' }}>
+                          &ldquo;{qr.betterVersion}&rdquo;
+                        </div>
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-dim)' }}>
+                        <span className="font-semibold">Why: </span>{qr.whyBetter}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Top recommendations */}
             {result.topRecommendations?.length > 0 && (
               <div className="rounded-2xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>Top recommendations</div>
                 <p className="text-xs mb-4" style={{ color: 'var(--text-dim)' }}>
-                  Three things to focus on for your next discovery rep.
+                  Five things to focus on for your next discovery rep.
                 </p>
                 <div className="space-y-3">
                   {result.topRecommendations.map((rec, i) => (

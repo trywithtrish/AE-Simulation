@@ -85,43 +85,43 @@ Return ONLY valid JSON in this exact shape:
 {
   "overallGrade": "<letter A+ through F>",
   "overallScore": <0-100>,
-  "summary": "<2-3 sentences on overall discovery performance>",
+  "summary": "<3-4 sentences on overall discovery performance — be specific about what they did and didn't uncover>",
   "categories": [
     {
       "name": "Question Quality",
       "score": <0-20>,
       "maxScore": 20,
-      "feedback": "<2-3 sentences specific to this transcript>"
+      "feedback": "<3-4 sentences specific to this transcript. Name at least one actual question they asked — quote it — and explain why it worked or didn't.>"
     },
     {
       "name": "Layered Follow-Ups",
       "score": <0-25>,
       "maxScore": 25,
-      "feedback": "<2-3 sentences>"
+      "feedback": "<3-4 sentences. Identify a specific moment they followed up well (if any) and a specific moment they moved on too early. Quote Riley's answer that deserved a follow-up.>"
     },
     {
       "name": "Quantification",
       "score": <0-20>,
       "maxScore": 20,
-      "feedback": "<2-3 sentences>"
+      "feedback": "<3-4 sentences. Name which numbers they got out of Riley (if any) and which specific numbers they left on the table. Be explicit.>"
     },
     {
       "name": "Pain → Impact",
       "score": <0-15>,
       "maxScore": 15,
-      "feedback": "<2-3 sentences>"
+      "feedback": "<3-4 sentences. Did they connect any pain to a business consequence? Name the specific impact stories they surfaced vs. missed.>"
     },
     {
       "name": "Stakeholder Mapping",
       "score": <0-10>,
       "maxScore": 10,
-      "feedback": "<1-2 sentences>"
+      "feedback": "<2-3 sentences. Did they ask who else is involved? Name what they found (if anything) and what they missed (CFO, VP Eng).>"
     },
     {
       "name": "Listening Discipline",
       "score": <0-10>,
       "maxScore": 10,
-      "feedback": "<1-2 sentences>"
+      "feedback": "<2-3 sentences. Did they pitch? Did they interrupt? Were they reactive to what Riley actually said?>"
     }
   ],
   "painLayersUncovered": [
@@ -129,8 +129,8 @@ Return ONLY valid JSON in this exact shape:
       "layer": "surface",
       "description": "Surface pain (scorecard completion, HM inconsistency)",
       "unlocked": <boolean>,
-      "unlockingQuote": "<the AE question that unlocked this layer, if any>",
-      "exampleUnlockQuestion": "<example question the AE could have used to unlock this if they didn't>"
+      "unlockingQuote": "<the exact AE question or statement that unlocked this layer, or null>",
+      "exampleUnlockQuestion": "<a full sentence question the AE could say to unlock this>"
     },
     { "layer": "impact", "description": "Impact pain (lost candidate, TTH, senior engineer dropout)", "unlocked": <bool>, "unlockingQuote": "<or null>", "exampleUnlockQuestion": "..." },
     { "layer": "urgency", "description": "Urgency/strategic stakes (Series C, CEO mandate, board pressure)", "unlocked": <bool>, "unlockingQuote": "<or null>", "exampleUnlockQuestion": "..." },
@@ -139,28 +139,42 @@ Return ONLY valid JSON in this exact shape:
   ],
   "missedOpportunities": [
     {
-      "rileyQuote": "<exact thing Riley said that the AE didn't dig into>",
-      "whatYouDid": "<what the AE actually did instead — moved on, pitched, etc>",
-      "betterFollowUp": "<the exact follow-up question the AE should have asked, written in first person they could say it>",
-      "whyItMatters": "<one sentence on what they would have unlocked>"
+      "rileyQuote": "<exact words Riley said that the AE didn't dig into — must be a direct quote>",
+      "whatYouDid": "<what the AE actually did next — moved on, asked something unrelated, pitched, etc. Be specific.>",
+      "betterFollowUp": "<the exact follow-up question the AE should have asked, written in first person as if the AE is saying it>",
+      "whyItMatters": "<one sentence: what deeper information this would have unlocked>"
+    }
+  ],
+  "strengthsMoments": [
+    {
+      "aeQuote": "<exact words the AE said that demonstrated good discovery technique>",
+      "whyGood": "<1-2 sentences explaining specifically why this worked — what principle it demonstrates>"
+    }
+  ],
+  "questionRewrites": [
+    {
+      "originalQuestion": "<exact weak or closed question the AE asked — must be a direct quote>",
+      "betterVersion": "<the rewritten question — same intent, better technique, full sentence the AE could say verbatim>",
+      "whyBetter": "<one sentence explaining the technique difference — e.g. 'open-ended instead of yes/no', 'asks about impact not feature', etc.>"
     }
   ],
   "topRecommendations": [
     {
-      "skill": "<which discovery skill — e.g. 'Quantification', 'Layered follow-ups'>",
-      "advice": "<specific advice tied to this transcript>",
-      "exampleQuestion": "<exact words the AE could use next time>"
+      "skill": "<discovery skill name — e.g. 'Layered follow-ups', 'Quantification', 'Impact bridging'>",
+      "advice": "<3-4 sentences of specific coaching tied to what happened in this transcript. Don't be generic. Name the actual moment.>",
+      "exampleQuestion": "<full sentence the AE could say verbatim next time — not a template>"
     }
   ]
 }
 
 CRITICAL:
-- Be specific. Quote exact moments. No generic advice.
-- For missedOpportunities, identify 3–5 specific moments. Each must include the exact Riley quote and the exact follow-up the AE should have asked.
-- For topRecommendations, give 3 prioritized recommendations with example questions written as full sentences the AE could say.
-- exampleQuestion must be a real question they could say verbatim — not a template.
-- If they uncovered nothing in a layer, the unlockingQuote should be null.
-- Hold a high bar. Discovery is a hard skill — don't grade easy.`
+- Be specific. Quote exact moments from the transcript. Zero generic advice.
+- missedOpportunities: identify 5–7 specific moments. Every entry needs the exact Riley quote and an exact rewritten follow-up.
+- strengthsMoments: identify 2–3 things the AE genuinely did well — specific quotes with explanation. If they did nothing well, find the least bad moments and explain what principle they were accidentally applying.
+- questionRewrites: pick 2–3 actual weak questions from the transcript and rewrite them. Only use questions the AE actually asked — do not invent examples.
+- topRecommendations: give 5 prioritized recommendations, most important first. Each must name a real moment from the call and give a verbatim example question.
+- If they uncovered nothing in a pain layer, unlockingQuote should be null.
+- Hold a high bar. Discovery is genuinely hard — don't grade easy.`
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
