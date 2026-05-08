@@ -56,11 +56,13 @@ export default function DiscoveryDebriefPage() {
       setError('No transcript found — the call may have been too short.')
       return
     }
+    const variantRaw = sessionStorage.getItem('discoveryCoach.variant')
+    const rileyVariant = variantRaw ? JSON.parse(variantRaw) : undefined
     setGrading(true)
     fetch('/api/discovery-coach/grade', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transcript: parsed }),
+      body: JSON.stringify({ transcript: parsed, rileyVariant }),
     })
       .then((r) => r.json())
       .then((data) => { setResult(data); setGrading(false) })

@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { METAVIEW_KNOWLEDGE } from '@/lib/metaview'
-import { DISCOVERY_DEEP_DIVE_RUBRIC, type DiscoveryGradeResult } from '@/lib/discovery-coach'
+import { DISCOVERY_DEEP_DIVE_RUBRIC, generateGradingContext, type DiscoveryGradeResult, type RileyVariant } from '@/lib/discovery-coach'
 
 interface TranscriptEntry {
   role: 'user' | 'assistant'
@@ -9,6 +9,7 @@ interface TranscriptEntry {
 
 interface RequestShape {
   transcript: TranscriptEntry[]
+  rileyVariant?: RileyVariant
 }
 
 function scoreToLetter(score: number): string {
@@ -27,7 +28,7 @@ function scoreToLetter(score: number): string {
 
 export async function POST(req: Request) {
   const openai = new OpenAI()
-  const { transcript } = await req.json() as RequestShape
+  const { transcript, rileyVariant } = await req.json() as RequestShape
 
   const aeWords = transcript
     .filter((t) => t.role === 'user')
@@ -50,34 +51,13 @@ This was a DISCOVERY-ONLY exercise. There was no demo, no pitch. The AE's job wa
 Metaview product knowledge (for context, but the AE shouldn't have been pitching):
 ${METAVIEW_KNOWLEDGE}
 
-Riley Chen's full situation (so you know what good discovery WOULD have uncovered — use this to identify what they uncovered vs missed):
+Riley Chen's full situation for THIS session (so you know what good discovery WOULD have uncovered — use this to identify what they uncovered vs missed):
 
-**Surface layer (revealed by open process questions):**
-- Hiring fast post-Series B, ~48 employees, scaling to 80
-- Scorecard completion in Ashby is ~45%
-- 4 of 7 hiring managers consistently submit on time
-- Engineers are the worst offenders on feedback
-
-**Impact layer (revealed by "what's the cost?" follow-ups):**
-- Lost a senior AE candidate to Linear last quarter — debrief took 9 days
-- Time-to-hire is 28 days, target is under 18
-- Senior engineers drop out of cycles by day 21 (cycles run 30+ days)
-- No candidate NPS data because nobody writes structured notes
-
-**Urgency layer (revealed by timeline/strategic questions):**
-- Series C conversations expected in 6–9 months
-- CEO told Riley: "I want hiring to be a competitive advantage by Q3"
-- Michael McBride (new board member, ex-GitLab CRO) asking pointed questions about hiring funnel data
-
-**Buying group layer (revealed by "who else is involved?"):**
-- CFO Andrew approves any tool over $5K/year
-- VP Engineering Mark must bless anything that touches engineering interview workflow
-- Mark has been burned by recruiting tooling before
-
-**Personal layer (revealed by genuinely human questions):**
-- Riley was hired 6 months ago specifically to fix this
-- If Riley can't show measurable progress in 12 months, their role is at risk
-- Watched a peer get fired for badly-scaled hiring at last company — pressure is personal
+${rileyVariant ? generateGradingContext(rileyVariant) : `**Surface layer:** Scorecard completion ~45%, 4 of 7 HMs on time, engineers worst offenders
+**Impact layer:** Lost senior AE to Linear (debrief took 9 days), TTH 28 days vs 18 target, engineers drop out by day 21
+**Urgency layer:** Series C in 6–9 months, CEO mandate for Q3, board member asking about hiring data
+**Buying group layer:** CFO Andrew ($5K threshold), VP Eng Mark (burned by prior tool adoption failures)
+**Personal layer:** Role at risk in 12 months, watched peer get fired for bad hiring scale`}
 
 ${DISCOVERY_DEEP_DIVE_RUBRIC}
 

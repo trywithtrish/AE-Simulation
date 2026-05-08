@@ -103,6 +103,10 @@ export default function DiscoveryCoachPage() {
       const data = await res.json()
       const ephemeralKey: string = data.client_secret?.value
       if (!ephemeralKey) throw new Error('No ephemeral key')
+      // Store the variant so the grade route knows what Riley's situation was
+      if (data.rileyVariant) {
+        sessionStorage.setItem('discoveryCoach.variant', JSON.stringify(data.rileyVariant))
+      }
 
       const pc = new RTCPeerConnection()
       pcRef.current = pc

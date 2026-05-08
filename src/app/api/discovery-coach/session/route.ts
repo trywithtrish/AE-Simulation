@@ -1,6 +1,9 @@
-import { DISCOVERY_COACH_PERSONA, DISCOVERY_COACH_SYSTEM_PROMPT } from '@/lib/discovery-coach'
+import { DISCOVERY_COACH_PERSONA, generateRileyVariant, generateDiscoveryCoachPrompt } from '@/lib/discovery-coach'
 
 export async function POST() {
+  const variant = generateRileyVariant()
+  const instructions = generateDiscoveryCoachPrompt(variant)
+
   const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
     method: 'POST',
     headers: {
@@ -10,7 +13,7 @@ export async function POST() {
     body: JSON.stringify({
       model: 'gpt-4o-realtime-preview',
       voice: DISCOVERY_COACH_PERSONA.voice,
-      instructions: DISCOVERY_COACH_SYSTEM_PROMPT,
+      instructions,
       turn_detection: {
         type: 'server_vad',
         threshold: 0.5,
@@ -27,5 +30,5 @@ export async function POST() {
   }
 
   const data = await response.json()
-  return Response.json(data)
+  return Response.json({ ...data, rileyVariant: variant })
 }
